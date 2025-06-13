@@ -31,10 +31,11 @@ def test_func3(key):
 
 
 if __name__ == '__main__':
-    test_func1('A')
+    a = test_func1('A')
+    print(a)
 
-    import asyncio
-
-    asyncio.run(test_func2('B'))
+    # import asyncio
+    #
+    # asyncio.run(test_func2('B'))
 
     # test_func3('C')

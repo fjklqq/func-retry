@@ -1,11 +1,7 @@
 # func-retry
 
-[![PyPI version](https://img.shields.io/pypi/v/func-retry)](https://pypi.org/project/func-retry/)
-[![License](https://img.shields.io/github/license/fjklqq/func-retry)](LICENSE)
 
 ## 📦 安装
-
-你可以通过 pip 安装：
 
 ```bash
 pip install func-retry
@@ -71,7 +67,3 @@ test_func()
 | `times`    | `Optional[int]`                                                   | 最大重试次数，默认为 `3`，若为 `None` 则无限重试直到成功 |
 | `delay`    | `Optional[int]`                                                   | 每次重试之间的等待时间（秒），默认不延迟               |
 | `callback` | `Callable[[Exception, int, Tuple, Dict], Union[Awaitable, None]]` | 可选回调函数，在每次失败后调用                    |
-
-## 📝 许可证
-
-本项目采用 MIT License。详见 [LICENSE](LICENSE) 文件。
