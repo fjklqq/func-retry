@@ -1,13 +1,16 @@
 import asyncio
 import functools
 import time
+import traceback
 from typing import Optional, Callable, Awaitable, Union, Tuple, Dict
 
 Callback = Optional[Callable[[Exception, int, Tuple, Dict], Union[Awaitable, None]]]
 
 
 class MaxRetryError(Exception):
-    ...
+    def __init__(self, message, errors, **kwargs):
+        super().__init__(message)
+        self.errors = errors
 
 
 def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
@@ -35,6 +38,8 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
         @functools.wraps(func)
         async def async_retry(*args, **kwargs):
             current_retry_times = 0
+            errors = []
+            error_traceback = ''
             while do_try(current_retry_times, times):
                 try:
                     return await func(*args, **kwargs)
@@ -42,13 +47,18 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
                     if callback:
                         await callback(e, current_retry_times, args, kwargs)
                     current_retry_times += 1
+                    errors.append(e)
+                    error_traceback += f"[{current_retry_times - 1}] {traceback.format_exc()}\n"
                     if delay:
                         await asyncio.sleep(delay)
-            raise MaxRetryError("The maximum number of retries has been reached")
+            raise MaxRetryError(f"{error_traceback}\nThe maximum number of retries has been reached",
+                                errors=errors)
 
         @functools.wraps(func)
         def sync_retry(*args, **kwargs):
             current_retry_times = 0
+            errors = []
+            error_traceback = ''
             while do_try(current_retry_times, times):
                 try:
                     return func(*args, **kwargs)
@@ -56,9 +66,12 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
                     if callback:
                         callback(e, current_retry_times, args, kwargs)
                     current_retry_times += 1
+                    errors.append(e)
+                    error_traceback += f"[{current_retry_times - 1}] {traceback.format_exc()}\n"
                     if delay:
                         time.sleep(delay)
-            raise MaxRetryError("The maximum number of retries has been reached")
+            raise MaxRetryError(f"{error_traceback}\nThe maximum number of retries has been reached",
+                                errors=errors)
 
         # 判断函数是否为异步函数
         if asyncio.iscoroutinefunction(func):

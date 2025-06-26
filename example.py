@@ -1,7 +1,7 @@
 # @Time     : 2025/6/13 10:00
 # @Software : Python 3.10
 # @About    :
-from func_retry import retry
+from func_retry import retry, MaxRetryError
 
 
 def callback_func(current_error, current_retry_times, input_args, input_kwargs):
@@ -31,8 +31,11 @@ def test_func3(key):
 
 
 if __name__ == '__main__':
-    a = test_func1('A')
-    print(a)
+    try:
+        a = test_func1('A')
+        print(a)
+    except MaxRetryError as e:
+        print(e)
 
     # import asyncio
     #
