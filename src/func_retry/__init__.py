@@ -2,9 +2,12 @@ import asyncio
 import functools
 import time
 import traceback
+import logging
 from typing import Optional, Callable, Awaitable, Union, Tuple, Dict
 
 Callback = Optional[Callable[[Exception, int, Tuple, Dict], Union[Awaitable, None]]]
+
+logger = logging.getLogger('func_retry')
 
 
 class MaxRetryError(Exception):
@@ -14,7 +17,7 @@ class MaxRetryError(Exception):
 
 
 def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
-          callback: Callback = None):
+          print_exc:bool = False, callback: Callback = None):
     """
     Retry
 
@@ -23,6 +26,7 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
         times : **Optional[int]** Max retry times. Default to **3**.
             When set to `None`, it will continue to retry until successful
         delay: **Optional[int]** Delay seconds. Default to **None**.
+        print_exc: **bool** Show error info. Default to **False**
         callback: **Optional[Callable[[Exception, int, Tuple, Dict], Union[Awaitable, None]]]**
 
     Returns:
@@ -49,6 +53,9 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
                     current_retry_times += 1
                     errors.append(e)
                     error_traceback += f"[{current_retry_times - 1}] {traceback.format_exc()}\n"
+                    logger.error(f'Run {func.__name__} error:\n'+traceback.format_exc(),stacklevel=2)
+                    if print_exc:
+                        traceback.print_exc()
                     if delay:
                         await asyncio.sleep(delay)
             raise MaxRetryError(f"{error_traceback}\nThe maximum number of retries has been reached",
@@ -68,6 +75,10 @@ def retry(exc=Exception, times: Optional[int] = 3, delay: Optional[int] = None,
                     current_retry_times += 1
                     errors.append(e)
                     error_traceback += f"[{current_retry_times - 1}] {traceback.format_exc()}\n"
+
+                    logger.error(f'Try run {func.__name__} error, error info:\n'+traceback.format_exc(),stacklevel=2)
+                    if print_exc:
+                        traceback.print_exc()
                     if delay:
                         time.sleep(delay)
             raise MaxRetryError(f"{error_traceback}\nThe maximum number of retries has been reached",
