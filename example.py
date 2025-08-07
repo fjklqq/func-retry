@@ -59,6 +59,15 @@ if __name__ == '__main__':
 
     import asyncio
 
-    asyncio.run(test_func5('B'))
+    async def test_func6(key):
+        @retry(times=1, delay=1,default='!!')
+        def inner_func(key):
+            print(f"start run inner_func --> {key}")
+            raise Exception("inner_func error")
+
+        result = inner_func(key)
+        print(f"Result -> {result}")
+
+    asyncio.run(test_func6('A'))
 
     # test_func3('C')
